@@ -5,11 +5,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 public class Main {
     public static void main(String[] args) {
+        buscaPagadores();
+    }
+    public static void buscaPagadores(){
         try{
-            System.out.println("ola");
             DataSourceMySQL ds = new DataSourceMySQL();
             Connection c = ds.conectaBD();
-            System.out.println(c);
             PreparedStatement ps = c.prepareStatement("SELECT * FROM Pagador");
             ResultSet resultSet = ps.executeQuery();
             while(resultSet.next()){
@@ -23,5 +24,4 @@ public class Main {
             System.err.println(e.getMessage());
         }
     }
-
 }
