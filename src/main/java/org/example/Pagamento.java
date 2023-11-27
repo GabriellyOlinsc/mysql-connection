@@ -1,12 +1,13 @@
 package org.example;
+import java.io.*;
 import java.sql.Blob;
 import java.util.Date;
 
-public class Pagamento {
+public class Pagamento implements Serializable {
     private int id;
     private int idPagador;
     private int idUnidade;
-    private Date dataPagamento;
+    private java.sql.Date dataPagamento;
     private Date dataRegistro;
     private Blob comprovante;
     private int ano;
@@ -23,8 +24,8 @@ public class Pagamento {
         this.mes = 0;
     }
 
-    public Pagamento(int id, Date dataPagamento, Date dataRegistro, Blob comprovante, int ano, int mes, int idPagador, int idUnidade) {
-        this.id = id;
+    public Pagamento( java.sql.Date dataPagamento, Date dataRegistro, Blob comprovante, int ano, int mes, int idPagador, int idUnidade) {
+        this.id = 0;
         this.idPagador = idPagador;
         this.idUnidade = idUnidade;
         this.dataPagamento = dataPagamento;
@@ -34,6 +35,15 @@ public class Pagamento {
         this.mes = mes;
     }
 
+
+    public byte[] toByteArray() throws IOException {
+        try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
+            try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream)) {
+                objectOutputStream.writeObject(this);
+            }
+            return byteArrayOutputStream.toByteArray();
+        }
+    }
     public int getId() {
         return id;
     }
@@ -58,11 +68,11 @@ public class Pagamento {
         this.idUnidade = idUnidade;
     }
 
-    public Date getdataPagamento() {
+    public java.sql.Date getdataPagamento() {
         return dataPagamento;
     }
 
-    public void setdataPagamento(Date dataPagamento) {
+    public void setdataPagamento(java.sql.Date dataPagamento) {
         this.dataPagamento = dataPagamento;
     }
 

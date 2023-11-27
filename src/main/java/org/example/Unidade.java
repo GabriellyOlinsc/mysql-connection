@@ -1,28 +1,36 @@
 package org.example;
 public class Unidade {
-    private int id;
+    private int numIdentificador;
     private String localizacao;
 
     public Unidade(){
-        this.id = 0;
+        this.numIdentificador = 0;
         this.localizacao = "";
     }
-    public Unidade(int id, String localizacao) {
-        this.id = id;
+    public Unidade(int numIdentificador, String localizacao) {
+        this.numIdentificador = numIdentificador;
         this.localizacao = localizacao;
     }
 
-    public int getId() {
-        return id;
+    public int getNumIdentificador() {
+        return numIdentificador;
     }
     public String getLocalizacao() {
         return localizacao;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public void setNumIdentificador(int id) {
+        this.numIdentificador = id;
     }
     public void setLocalizacao(String localizacao) {
         this.localizacao = localizacao;
+    }
+
+    @Override
+    public String toString() {
+        return "Unidade{" +
+                "Numero Identificador =" + numIdentificador +
+                ", localizacao='" + localizacao + '\'' +
+                '}';
     }
 }

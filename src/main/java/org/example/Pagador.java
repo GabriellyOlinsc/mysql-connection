@@ -13,8 +13,8 @@ public class Pagador {
         this.cpf = "";
         this.telefone = "";
     }
-    public Pagador(int id, String nome, String email, String cpf, String telefone) {
-        this.id = id;
+    public Pagador(String nome, String email, String cpf, String telefone) {
+        this.id = 0;
         this.nome = nome;
         this.email = email;
         this.cpf = cpf;
