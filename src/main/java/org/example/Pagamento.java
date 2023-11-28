@@ -35,15 +35,6 @@ public class Pagamento implements Serializable {
         this.mes = mes;
     }
 
-
-    public byte[] toByteArray() throws IOException {
-        try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
-            try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream)) {
-                objectOutputStream.writeObject(this);
-            }
-            return byteArrayOutputStream.toByteArray();
-        }
-    }
     public int getId() {
         return id;
     }
@@ -106,5 +97,16 @@ public class Pagamento implements Serializable {
 
     public void setMes(int mes) {
         this.mes = mes;
+    }
+
+    @Override
+    public String toString() {
+        return "COMPROVANTE DE PAGAMENTO {" +
+                "\nID Pagador: " + idPagador +
+                "\nID Unidade: " + idUnidade +
+                "\nData Pagamento: " + dataPagamento +
+                "\nAno de referência: " + ano +
+                "\nMes de referência: " + mes +
+                "\n}";
     }
 }

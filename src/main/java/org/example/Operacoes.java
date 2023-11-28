@@ -20,6 +20,7 @@ public class Operacoes {
         pagador.setCpf(input.nextLine());
         System.out.print("Telefone: ");
         pagador.setTelefone(input.nextLine());
+
         try {
             PreparedStatement ps = conec.prepareStatement("call InserirPagador(?,?,?,?)");
             ps.setString(1, pagador.getNome());
@@ -69,35 +70,40 @@ public class Operacoes {
             java.util.Date utilDate = formatoUsuario.parse(data);
             java.sql.Date sqlDate = new java.sql.Date(utilDate.getTime());
             pagamento.setdataPagamento(sqlDate);
-
         } catch (ParseException e) {
             System.err.println("Erro ao formatar a data. Certifique-se de fornecer no formato correto (yyyy-MM-dd).");
             return;
         }
-        byte[] pagamentoBytes = pagamento.toByteArray();
-        ByteArrayInputStream inputStream = new ByteArrayInputStream(pagamentoBytes);
+
+        byte[] dadosDoComprovante = criarDadosDoComprovante(pagamento);
 
         try {
+            ByteArrayInputStream inputStream = new ByteArrayInputStream(dadosDoComprovante);
             PreparedStatement ps = conec.prepareStatement("call InserirPagamento(?,?,?,?,?,?)");
             ps.setInt(1, pagamento.getIdPagador());
             ps.setDate(2,pagamento.getdataPagamento());
             ps.setInt(3,pagamento.getIdUnidade());
             ps.setInt(4, pagamento.getAno());
             ps.setInt(5, pagamento.getMes());
-            ps.setBlob(6, inputStream,inputStream.available() );
+            ps.setBlob(6, inputStream, dadosDoComprovante.length);
             ps.execute();
             System.out.println("Pagamento registrado com sucesso!");
         } catch (Exception e) {
             System.err.println(e.getMessage());
         }
     }
+
+
+    private static byte[] criarDadosDoComprovante(Pagamento pagamento) {
+        String conteudoComprovante = pagamento.toString();
+        return conteudoComprovante.getBytes();
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////// BUSCAR ////////////////////////////////////////////////////////////////
-    public static void buscarPagadores() {
+    public static void buscarPagadores(Connection con) {
         try {
-            DataSourceMySQL ds = new DataSourceMySQL();
-            Connection c = ds.conectaBD();
-            PreparedStatement ps = c.prepareStatement("SELECT * FROM Pagador");
+            PreparedStatement ps = con.prepareStatement("SELECT * FROM Pagador");
             ResultSet resultSet = ps.executeQuery();
             while (resultSet.next()) {
                 System.out.println("ID: " + resultSet.getString("id"));
@@ -112,15 +118,15 @@ public class Operacoes {
         }
     }
 
-    public static void buscarPagamentos() {
+    public static void buscarPagamentos(Connection con) {
         try {
-            DataSourceMySQL ds = new DataSourceMySQL();
-            Connection c = ds.conectaBD();
-            PreparedStatement ps = c.prepareStatement(
-                    "Select P.id, Pagador.nomeCompleto as nomePagador, P.dataPagamento, P.anoReferencia, P.mesReferencia, P.idUnidade, P.comprovante, P.dataRegistro  from Pagamento P\n" +
-                            "JOIN Pagador ON P.idPagador = Pagador.id\n" +
-                            "ORDER BY P.anoReferencia, P.mesReferencia;\n" +
-                            "\n");
+            PreparedStatement ps = con.prepareStatement(
+                    """
+                            Select P.id, Pagador.nomeCompleto as nomePagador, P.dataPagamento, P.anoReferencia, P.mesReferencia, P.idUnidade, P.comprovante, P.dataRegistro  from Pagamento P
+                            JOIN Pagador ON P.idPagador = Pagador.id
+                            ORDER BY P.anoReferencia, P.mesReferencia;
+
+                            """);
             ResultSet resultSet = ps.executeQuery();
             while (resultSet.next()) {
                 String nome = resultSet.getString("nomePagador");
@@ -139,10 +145,8 @@ public class Operacoes {
         }
     }
 
-    public static void buscarUnidades() {
+    public static void buscarUnidades(Connection c) {
         try {
-            DataSourceMySQL ds = new DataSourceMySQL();
-            Connection c = ds.conectaBD();
             PreparedStatement ps = c.prepareStatement("SELECT * FROM Unidade");
             ResultSet resultSet = ps.executeQuery();
             while (resultSet.next()) {
@@ -157,12 +161,10 @@ public class Operacoes {
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //////////////////////////////////////////// DELETAR ///////////////////////////////////////////////////////////////
-    public static void excluirPagador(int idPagador) {
+    //////////////////////////////////////////// DELETAR ///////////////////////////////////////////////////////////////10
+    public static void excluirPagador(Connection con, int idPagador) {
         try {
-            DataSourceMySQL ds = new DataSourceMySQL();
-            Connection c = ds.conectaBD();
-            PreparedStatement ps = c.prepareStatement("CALL DeletarPagador(?)");
+            PreparedStatement ps = con.prepareStatement("CALL DeletarPagador(?)");
             ps.setInt(1, idPagador);
             ps.execute();
             System.out.println("Pagador excluido com sucesso!");
@@ -171,10 +173,8 @@ public class Operacoes {
         }
     }
 
-    public static void excluirPagamento(int idPagamento) {
+    public static void excluirPagamento(Connection c,int idPagamento) {
         try {
-            DataSourceMySQL ds = new DataSourceMySQL();
-            Connection c = ds.conectaBD();
             PreparedStatement ps = c.prepareStatement("CALL DeletarPagamento(?)");
             ps.setInt(1, idPagamento);
             ps.execute();
@@ -184,10 +184,8 @@ public class Operacoes {
         }
     }
 
-    public static void excluirUnidade(int idUnidade) {
+    public static void excluirUnidade(Connection c,int idUnidade) {
         try {
-            DataSourceMySQL ds = new DataSourceMySQL();
-            Connection c = ds.conectaBD();
             PreparedStatement ps = c.prepareStatement("CALL DeletarUnidade(?)");
             ps.setInt(1, idUnidade);
             ps.execute();
@@ -198,34 +196,32 @@ public class Operacoes {
     }
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  public static void baixarComprovante(Connection conec) throws SQLException, ClassNotFoundException, FileNotFoundException, IOException {
-      Scanner input = new Scanner(System.in);
-      System.out.print("Informe o id do pagamento: ");
-      int idPagamento = input.nextInt();
+    public static void baixarComprovante(Connection conec) {
+          Scanner input = new Scanner(System.in);
+          System.out.print("Informe o id do pagamento: ");
+          int idPagamento = input.nextInt();
+          input.nextLine();
+          System.out.print("Informe o caminho do arquivo a ser baixado:");
+          String path = input.nextLine();
 
-      input.nextLine();
-      System.out.print("Informe o caminho do arquivo a ser baixado:");
-      String path = input.nextLine();
-      try (PreparedStatement ps = conec.prepareStatement("SELECT comprovante FROM Pagamento WHERE id=?")) {
-          ps.setInt(1, idPagamento);
-
-          try (ResultSet rs = ps.executeQuery()) {
+          try {
+              PreparedStatement ps = conec.prepareStatement("SELECT comprovante FROM Pagamento WHERE id=?");
+              ps.setInt(1, idPagamento);
+              ResultSet rs = ps.executeQuery() ;
               if (rs.next()) {
                   Blob blob = rs.getBlob("comprovante");
-                  byte[] dados = blob.getBytes(1, (int) blob.length());
-
-                  File f = new File(path);
+                  File directory = new File(path);
+                  File f = new File(directory,"comprovante_downloaded.txt");
                   try (FileOutputStream fos = new FileOutputStream(f)) {
+                      byte[] dados = blob.getBytes(1, (int) blob.length());
                       fos.write(dados);
+                      System.out.println("Comprovante baixado com sucesso em: " + f.getAbsolutePath());
                   }
-
-                  System.out.println("Comprovante baixado com sucesso!");
-              } else {
-                  System.out.println("Nenhum comprovante encontrado para o ID de pagamento fornecido.");
+              }else {
+                  System.err.println("Comprovante não encontrado para o ID do Pagamento: " + idPagamento);
               }
+          } catch (Exception e) {
+              System.err.println(e.getMessage());
           }
-      } catch (Exception e) {
-          System.err.println(e.getMessage());
-      }
-    }
+        }
 }
